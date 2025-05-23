@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>TopCell - Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #ecf0f1;
+      padding: 20px;
+      max-width: 500px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    #loginBox, #sistemaBox {
+      display: none;
+    }
+
+    input, select, button, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 6px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #27ae60;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background-color: #219150;
+    }
+
+    textarea {
+      resize: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>TopCell - Sistema de Pedidos</h1>
+
+  <div id="loginBox">
+    <input type="text" id="usuario" placeholder="Usuário" />
+    <input type="password" id="senha" placeholder="Senha" />
+    <button onclick="fazerLogin()">Entrar</button>
+  </div>
+
+  <div id="sistemaBox">
+    <select id="loja">
+      <option value="Nova Itarana">TopCell Nova Itarana</option>
+      <option value="Brejões">TopCell Brejões</option>
+    </select>
+
+    <input type="date" id="dataPedido" />
+    <input type="text" id="marca" placeholder="Marca" />
+    <input type="text" id="modelo" placeholder="Modelo" />
+    <input type="text" id="peca" placeholder="Peça" />
+    <input type="number" id="quantidade" placeholder="Quantidade" />
+    <button onclick="adicionarPedido()">Adicionar Pedido</button>
+
+    <h3>Resumo dos Pedidos</h3>
+    <textarea id="resumoPedidos" rows="12" readonly></textarea>
+    <button onclick="gerarResumo()">Gerar Lista Completa</button>
+    <button onclick="visualizarPedidosDoDia()">Visualizar Pedidos do Dia</button>
+    <button onclick="limparPedidos()">Limpar Todos os Pedidos</button>
+  </div>
+
+  <script>
+    const USUARIO_CORRETO = "admin";
+    const SENHA_CORRETA = "8112";
+
+    let pedidos = JSON.parse(localStorage.getItem('pedidos')) || [];
+
+    window.onload = () => {
+      document.getElementById("loginBox").style.display = "block";
+    };
+
+    function fazerLogin() {
+      const usuario = document.getElementById("usuario").value;
+      const senha = document.getElementById("senha").value;
+
+      if (usuario === USUARIO_CORRETO && senha === SENHA_CORRETA) {
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("sistemaBox").style.display = "block";
+      } else {
+        alert("Usuário ou senha incorretos!");
+      }
+    }
+
+    function adicionarPedido() {
+      const loja = document.getElementById('loja').value;
+      const data = document.getElementById('dataPedido').value || new Date().toISOString().slice(0, 10);
+      const marca = document.getElementById('marca').value.trim();
+      const modelo = document.getElementById('modelo').value.trim();
+      const peca = document.getElementById('peca').value.trim();
+      const quantidade = document.getElementById('quantidade').value;
+
+      if (!marca || !modelo || !peca || !quantidade) {
+        alert("Preencha todos os campos.");
+        return;
+      }
+
+      pedidos.push({ loja, data, marca, modelo, peca, quantidade });
+      localStorage.setItem('pedidos', JSON.stringify(pedidos));
+
+      document.getElementById('dataPedido').value = "";
+      document.getElementById('marca').value = "";
+      document.getElementById('modelo').value = "";
+      document.getElementById('peca').value = "";
+      document.getElementById('quantidade').value = "";
+
+      alert("Pedido adicionado com sucesso!");
+    }
+
+    function gerarResumo() {
+      if (pedidos.length === 0) {
+        alert("Nenhum pedido registrado.");
+        return;
+      }
+
+      const resumo = pedidos.map((p, i) =>
+        `${i + 1}. Loja: ${p.loja} | Data: ${p.data} | Marca: ${p.marca} | Modelo: ${p.modelo} | Peça: ${p.peca} | Quantidade: ${p.quantidade}`
+      ).join('\n');
+
+      document.getElementById('resumoPedidos').value = resumo;
+    }
+
+    function visualizarPedidosDoDia() {
+      const hoje = new Date().toISOString().slice(0, 10);
+      const lojaSelecionada = document.getElementById('loja').value;
+
+      const pedidosDoDia = pedidos.filter(p => p.data === hoje && p.loja === lojaSelecionada);
+
+      if (pedidosDoDia.length === 0) {
+        document.getElementById('resumoPedidos').value = "Nenhum pedido para hoje nesta loja.";
+        return;
+      }
+
+      const resumo = pedidosDoDia.map((p, i) =>
+        `${i + 1}. Loja: ${p.loja} | Data: ${p.data} | Marca: ${p.marca} | Modelo: ${p.modelo} | Peça: ${p.peca} | Quantidade: ${p.quantidade}`
+      ).join('\n');
+
+      document.getElementById('resumoPedidos').value = resumo;
+    }
+
+    function limparPedidos() {
+      const confirmar = confirm("Tem certeza que deseja apagar todos os pedidos?");
+      if (confirmar) {
+        pedidos = [];
+        localStorage.removeItem('pedidos');
+        document.getElementById('resumoPedidos').value = "";
+        alert("Todos os pedidos foram apagados.");
+      }
+    }
+  </script>
+</body>
+</html>
